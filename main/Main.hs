@@ -7,11 +7,11 @@ import DarkLaunch.Store
 
 import Blaze.ByteString.Builder (copyByteString)
 import qualified Data.ByteString.Lazy as BL
-import Data.Csv
+import Data.Csv as CSV
 import qualified Data.Vector as V
 import System.Environment (getArgs)
 
-instance FromNamedRecord KeyRecord where
+instance CSV.FromNamedRecord KeyRecord where
     parseNamedRecord r = KeyRecord <$> r .: "name" <*> r .: "variations"
 
 subCommand :: String -> IO ()
