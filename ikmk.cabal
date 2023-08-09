@@ -32,9 +32,6 @@ executable ikmk
       , cassava
       , vector
       , bytestring
-      , warp
-      , wai
-      , http-types
       , utf8-string
       , blaze-builder
       , aeson
