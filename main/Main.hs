@@ -5,7 +5,6 @@ module Main (main) where
 import FizzBuzz.FizzBuzz as FB
 import DarkLaunch.Store
 
-import Blaze.ByteString.Builder (copyByteString)
 import qualified Data.ByteString.Lazy as BL
 import Data.Csv as CSV
 import qualified Data.Vector as V
