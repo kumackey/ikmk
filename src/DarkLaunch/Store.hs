@@ -3,23 +3,31 @@ module DarkLaunch.Store where
 
 import Data.Csv as CSV
 import Data.Csv.Builder
+import Data.Time.Clock
+import Data.Time.ISO8601
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Vector as V
 
+
 data Key = Key
     { name   :: String
     , variations :: Bool
+    , updateAt :: UTCTime
     } deriving Show
 
 data KeyRecord = KeyRecord
                      { recordName   :: !String
                      , recordVariations :: !String
+                     , recordUpdatedAt :: !String
                      } deriving (Show, Eq)
 
+instance CSV.FromNamedRecord KeyRecord where
+    parseNamedRecord r = KeyRecord <$> r .: "name" <*> r .: "variations" <*> r .: "updated_at"
+
 instance CSV.ToNamedRecord KeyRecord where
-    toNamedRecord (KeyRecord recordName recordVariations) = namedRecord [
-            "name" .= recordName, "variations" .= recordVariations]
+    toNamedRecord (KeyRecord recordName recordVariations recordUpdatedAt) = namedRecord [
+            "name" .= recordName, "variations" .= recordVariations, "updated_at" .= recordUpdatedAt]
 
 convStringToBool :: String -> Maybe Bool
 convStringToBool str
@@ -34,18 +42,17 @@ convBoolToString bool
 
 convKeyRecordToKey :: KeyRecord -> Maybe Key
 convKeyRecordToKey record = do
-    let rec = (convStringToBool .recordVariations) record
-    case rec of
-        Just r -> Just (Key (recordName record) r)
+    case (parseISO8601 . recordUpdatedAt) record of
+        Just time -> do
+            case (convStringToBool .recordVariations) record of
+                Just r -> Just (Key (recordName record) r time)
+                Nothing -> Nothing
         Nothing -> Nothing
 
 convKeyToKeyRecord :: Key -> KeyRecord
 convKeyToKeyRecord key = do
     let v = (convBoolToString .variations) key
-    KeyRecord (name key) v
-
-instance CSV.FromNamedRecord KeyRecord where
-    parseNamedRecord r = KeyRecord <$> r .: "name" <*> r .: "variations"
+    KeyRecord (name key) v ((formatISO8601.updateAt) key)
 
 findAllKeys :: IO (HM.HashMap String Key)
 findAllKeys = do
@@ -70,7 +77,8 @@ postKey key variations = do
     then putStrLn $ "key already exists: " ++ key
     else do
       let krs = map (\k -> convKeyToKeyRecord k) (HM.elems ks)
-      let keys = KeyRecord key variations : krs
-      BL.writeFile "src/DarkLaunch/keys.csv" $ encodeByName (header["name", "variations"]) keys
+      time <- getCurrentTime
+      let keys = KeyRecord key variations (formatISO8601 time) : krs
+      BL.writeFile "src/DarkLaunch/keys.csv" $ encodeByName (header["name", "variations", "updated_at"]) keys
       putStrLn "added"
 
