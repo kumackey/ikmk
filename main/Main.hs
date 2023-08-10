@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Main (main) where
 
 import FizzBuzz.FizzBuzz as FB
@@ -9,7 +7,9 @@ import System.Environment (getArgs)
 
 subCommand :: String -> IO ()
 subCommand a
-        | a == "darklaunch" = DS.getKeys
+        | a == "darklaunch" = do
+            keys <- DS.getKeys
+            print keys
         | a == "fizzbuzz" = FB.fizzBuzz
         | otherwise = putStrLn "Unknown application"
 

@@ -8,7 +8,7 @@ import qualified Data.Vector as V
 data Key = Key
     { name   :: String
     , variations :: Bool
-    }
+    } deriving Show
 
 data KeyRecord = KeyRecord
                      { recordName   :: !String
@@ -31,13 +31,19 @@ convKeyRecordToKey record = do
 instance CSV.FromNamedRecord KeyRecord where
     parseNamedRecord r = KeyRecord <$> r .: "name" <*> r .: "variations"
 
-getKeys :: IO()
+--gKeys :: [KeyRecord]
+--gKeys = do
+--    csvData <- BL.readFile "src/DarkLaunch/keys.csv"
+--    case decodeByName csvData of
+--                    Left err -> []
+--                    Right (_, v) -> V.toList v
+getKeys :: IO [Key]
 getKeys = do
     csvData <- BL.readFile "src/DarkLaunch/keys.csv"
     case decodeByName csvData of
-        Left err -> putStrLn err
-        Right (_, v) -> V.forM_ v $ \ k -> do
-            let km = convKeyRecordToKey(k)
-            case km of
-                Just km -> putStrLn $ "Key Name: " ++ name km ++ ", Variations: " ++ show (variations km)
-                Nothing -> putStrLn "invalid"
+        Left err -> do
+            putStrLn err
+            return []
+        Right (_, v) -> do
+            let keys = [k | Just k <- map convKeyRecordToKey $ V.toList v]
+            return keys
