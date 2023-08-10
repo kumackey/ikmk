@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module DarkLaunch.Store where
 
-import qualified Data.ByteString.Lazy as BL
 import Data.Csv as CSV
 import Data.Csv.Builder
-import qualified Data.Vector as V
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.HashMap.Strict as HM
+import qualified Data.Vector as V
 
 data Key = Key
     { name   :: String
@@ -20,14 +20,17 @@ data KeyRecord = KeyRecord
 instance CSV.ToNamedRecord KeyRecord where
     toNamedRecord (KeyRecord recordName recordVariations) = namedRecord [
             "name" .= recordName, "variations" .= recordVariations]
---    toRecord (KeyRecord recordName' recordVariations') = record [
---        toField recordName', toField recordVariations']
 
 convStringToBool :: String -> Maybe Bool
 convStringToBool str
                    | str == "True" = Just True
                    | str == "False" = Just False
                    | otherwise = Nothing
+
+convBoolToString :: Bool -> String
+convBoolToString bool
+                   | bool  = "True"
+                   | otherwise = "False"
 
 convKeyRecordToKey :: KeyRecord -> Maybe Key
 convKeyRecordToKey record = do
@@ -60,15 +63,14 @@ getKeys = do
     keys <- findAllKeys
     print keys
 
-convBoolToString :: Bool -> String
-convBoolToString bool
-                   | bool  = "True"
-                   | otherwise = "False"
-
 postKey :: String -> String ->  IO()
 postKey key variations = do
   ks <- findAllKeys
-  let krs = map (\k -> convKeyToKeyRecord k) (HM.elems ks)
-  let keys = KeyRecord key variations : krs
-  BL.writeFile "src/DarkLaunch/keys.csv" $ encodeByName (header["name", "variations"]) keys
-  putStrLn "added"
+  if HM.member key ks
+    then putStrLn $ "key already exists: " ++ key
+    else do
+      let krs = map (\k -> convKeyToKeyRecord k) (HM.elems ks)
+      let keys = KeyRecord key variations : krs
+      BL.writeFile "src/DarkLaunch/keys.csv" $ encodeByName (header["name", "variations"]) keys
+      putStrLn "added"
+
