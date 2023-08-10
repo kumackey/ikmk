@@ -65,10 +65,10 @@ convBoolToString bool
                    | bool  = "True"
                    | otherwise = "False"
 
-postKey :: String -> Bool ->  IO()
+postKey :: String -> String ->  IO()
 postKey key variations = do
   ks <- findAllKeys
   let krs = map (\k -> convKeyToKeyRecord k) (HM.elems ks)
-  let keys = KeyRecord key (convBoolToString variations) : krs
+  let keys = KeyRecord key variations : krs
   BL.writeFile "src/DarkLaunch/keys.csv" $ encodeByName (header["name", "variations"]) keys
   putStrLn "added"
