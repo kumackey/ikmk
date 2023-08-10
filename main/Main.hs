@@ -7,9 +7,7 @@ import System.Environment (getArgs)
 
 subCommand :: String -> IO ()
 subCommand a
-        | a == "darklaunch" = do
-            keys <- DS.getKeys
-            print keys
+        | a == "darklaunch" = DS.getKeys
         | a == "fizzbuzz" = FB.fizzBuzz
         | otherwise = putStrLn "Unknown application"
 

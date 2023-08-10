@@ -23,6 +23,7 @@ library
     , cassava
     , vector
     , bytestring
+    , unordered-containers
   default-language: Haskell2010
 
 executable ikmk

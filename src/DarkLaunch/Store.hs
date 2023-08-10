@@ -4,6 +4,7 @@ module DarkLaunch.Store where
 import qualified Data.ByteString.Lazy as BL
 import Data.Csv as CSV
 import qualified Data.Vector as V
+import qualified Data.HashMap.Strict as HM
 
 data Key = Key
     { name   :: String
@@ -31,19 +32,18 @@ convKeyRecordToKey record = do
 instance CSV.FromNamedRecord KeyRecord where
     parseNamedRecord r = KeyRecord <$> r .: "name" <*> r .: "variations"
 
---gKeys :: [KeyRecord]
---gKeys = do
---    csvData <- BL.readFile "src/DarkLaunch/keys.csv"
---    case decodeByName csvData of
---                    Left err -> []
---                    Right (_, v) -> V.toList v
-getKeys :: IO [Key]
+findAllKeys :: IO (HM.HashMap String Key)
+findAllKeys = do
+  csvData <- BL.readFile "src/DarkLaunch/keys.csv"
+  case decodeByName csvData of
+      Left err -> do
+          putStrLn err
+          return HM.empty
+      Right (_, v) -> do
+          let keys = [k | Just k <- map convKeyRecordToKey $ V.toList v]
+          return $ HM.fromList $ map (\k -> (name k, k)) keys
+
+getKeys :: IO()
 getKeys = do
-    csvData <- BL.readFile "src/DarkLaunch/keys.csv"
-    case decodeByName csvData of
-        Left err -> do
-            putStrLn err
-            return []
-        Right (_, v) -> do
-            let keys = [k | Just k <- map convKeyRecordToKey $ V.toList v]
-            return keys
+    keys <- findAllKeys
+    print keys
