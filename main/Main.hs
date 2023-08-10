@@ -8,9 +8,10 @@ import System.Environment (getArgs)
 subCommand :: [String] -> IO ()
 subCommand args
         | args !! 0 == "darklaunch" = do
-            if args !! 1 == "post"
-                then DS.postKey (args !! 2) (args !! 3)
-                else putStrLn "Arguments are too short, post"
+            case args !! 1 of
+             "get" -> DS.getKeys
+             "post" -> DS.postKey (args !! 2) (args !! 3)
+             _ -> putStrLn $ "invalid method: " ++ args !! 1
         | args !! 0 == "fizzbuzz" = FB.fizzBuzz
         | otherwise = putStrLn "Unknown application"
 
